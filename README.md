@@ -98,7 +98,7 @@ and request handler
 
 ```js
 var controllerModule = require('./controllers' + route.ctrlPath);
-var controler = controllerModule[route.actionName];
+var controller = controllerModule[route.actionName];
 controller(request, response, route.params);
 ```
 

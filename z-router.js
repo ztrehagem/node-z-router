@@ -54,15 +54,11 @@ function createRoutes(routes, stack, obj, options, isRoot) {
   });
 }
 Router.prototype.routesToString = function() {
-  var strbuf = [];
   var max = {
-    method: 0,
-    pathname: 0
+    method: Math.max.apply(null, this.routes.map(function(route) {return route.method.length;})),
+    pathname: Math.max.apply(null, this.routes.map(function(route) {return route.pathname.length;}))
   };
-  this.routes.forEach(function(route) {
-    max.method = max.method < route.method.length ? route.method.length : max.method;
-    max.pathname = max.pathname < route.pathname.length ? route.pathname.length : max.pathname;
-  });
+  var strbuf = [];
   this.routes.forEach(function(route) {
     strbuf.push(
       ' '.repeat(max.method - route.method.length) + route.method,

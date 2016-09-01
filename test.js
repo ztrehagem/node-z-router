@@ -1,4 +1,4 @@
-var Router = require('./router.js');
+var Router = require('./z-router.js');
 var ns = Router.namespace;
 var routes = ns('root', {
   '/': 'index',
@@ -11,7 +11,7 @@ var routes = ns('root', {
   }),
   ns('api', [
     ns('v1', [
-      ns('articles', {
+      ns('users', {
         '': {GET: 'index', POST: 'create'},
         '/:id': {GET: 'show'},
         '/:id/edit': {GET: 'edit', UPDATE: 'update'},
@@ -21,7 +21,7 @@ var routes = ns('root', {
   ])
 ]);
 var router = Router(routes);
-router.logRoutes();
+console.log(router.routesToString());
 
 var issues = [
   {method: 'GET', pathname: '/'},
@@ -30,12 +30,12 @@ var issues = [
   {method: 'POST', pathname: '/contact'},
   {method: 'GET', pathname: '/articles'},
   {method: 'GET', pathname: '/articles/2000/10/15/2'},
-  {method: 'GET', pathname: '/api/v1/articles'},
-  {method: 'POST', pathname: '/api/v1/articles'},
-  {method: 'GET', pathname: '/api/v1/articles/foo'},
-  {method: 'GET', pathname: '/api/v1/articles/foo/edit'},
-  {method: 'UPDATE', pathname: '/api/v1/articles/foo/edit'},
-  {method: 'DELETE', pathname: '/api/v1/articles/foo/delete'}
+  {method: 'GET', pathname: '/api/v1/users'},
+  {method: 'POST', pathname: '/api/v1/users'},
+  {method: 'GET', pathname: '/api/v1/users/foo'},
+  {method: 'GET', pathname: '/api/v1/users/foo/edit'},
+  {method: 'UPDATE', pathname: '/api/v1/users/foo/edit'},
+  {method: 'DELETE', pathname: '/api/v1/users/foo/delete'}
 ];
 
 issues.forEach(function(issue){

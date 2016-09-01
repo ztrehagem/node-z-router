@@ -2,7 +2,7 @@
   "name": "z-router",
   "version": "0.0.1",
   "description": "method and pathname router for node http server. z-router resolves a pair of method and pathname into controller path, action name and params, like rails.",
-  "main": "router.js",
+  "main": "z-router.js",
   "scripts": {
     "test": "node test.js"
   },

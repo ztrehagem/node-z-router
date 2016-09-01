@@ -31,7 +31,8 @@ Router.prototype.route = function(method, pathname) {
       (matches = route.regexp.exec(pathname));
   });
   return route && {
-    uri: route.uri,
+    method: route.method,
+    pathname: route.pathname,
     ctrlPath: route.ctrlPath,
     actionName: route.actionName,
     params: route.convertParams(matches.slice(1))
@@ -52,33 +53,36 @@ function createRoutes(routes, stack, obj, options, isRoot) {
     createRoutes(routes, currentStack + '/', child, options);
   });
 }
-Router.prototype.logRoutes = function() {
-  console.log('------ routes ------');
+Router.prototype.routesToString = function() {
+  var strbuf = [];
   var max = {
     method: 0,
-    uri: 0
+    pathname: 0
   };
   this.routes.forEach(function(route) {
     max.method = max.method < route.method.length ? route.method.length : max.method;
-    max.uri = max.uri < route.uri.length ? route.uri.length : max.uri;
+    max.pathname = max.pathname < route.pathname.length ? route.pathname.length : max.pathname;
   });
   this.routes.forEach(function(route) {
-    console.log(' '.repeat(max.method - route.method.length) + route.method,
-      route.uri + ' '.repeat(max.uri - route.uri.length),
+    strbuf.push(
+      ' '.repeat(max.method - route.method.length) + route.method,
+      ' ',
+      route.pathname + ' '.repeat(max.pathname - route.pathname.length),
       ' -> ',
-      route.ctrlPath.substring(1) + '#' + route.actionName
+      route.ctrlPath.substring(1) + '#' + route.actionName,
+      '\n'
     );
   });
-  console.log('--------------------');
+  return strbuf.join('');
 };
 
-function Route(method, uri, ctrlPath, actionName) {
+function Route(method, pathname, ctrlPath, actionName) {
   this.method = method.toUpperCase();
-  this.uri = uri;
+  this.pathname = pathname;
   this.ctrlPath = ctrlPath;
   this.actionName = actionName;
-  this.regexp = new RegExp('^' + this.uri.replace(/:[^/]+/g, '([^/]+)').replace(/\//g, '\\/') + '$');
-  this.paramKeys = this.uri.split('/').filter(function(path) {
+  this.regexp = new RegExp('^' + this.pathname.replace(/:[^/]+/g, '([^/]+)').replace(/\//g, '\\/') + '$');
+  this.paramKeys = this.pathname.split('/').filter(function(path) {
     return path.startsWith(':');
   }).map(function(path) {
     return path.substring(1);

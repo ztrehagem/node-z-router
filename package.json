@@ -1,6 +1,6 @@
 {
   "name": "z-router",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "method and pathname router for node http server.",
   "main": "z-router.js",
   "scripts": {

@@ -1,13 +1,10 @@
+var PATH = require('path');
+
 module.exports = function(routes, options) {
   return new Router(routes, options);
 };
 
 module.exports.namespace = function(name, paths, children) {
-  if( typeof name != 'string' ) {
-    children = paths;
-    paths = name;
-    name = null;
-  }
   if( Array.isArray(paths) ) {
     children = paths;
     paths = null;
@@ -21,7 +18,8 @@ module.exports.namespace = function(name, paths, children) {
 
 function Router(routes, options) {
   this.routes = [];
-  this.options = options;
+  this.options = options || {};
+  this.options.ctrlDir = this.options.ctrlDir || './controllers';
   createRoutes(this.routes, '', routes, this.options, true);
 }
 Router.prototype.route = function(method, pathname) {
@@ -35,6 +33,7 @@ Router.prototype.route = function(method, pathname) {
     pathname: route.pathname,
     ctrlPath: route.ctrlPath,
     actionName: route.actionName,
+    controller: route.controller,
     params: route.convertParams(matches.slice(1))
   };
 };
@@ -46,7 +45,7 @@ function createRoutes(routes, stack, obj, options, isRoot) {
       actions = {'get': actions};
     }
     forObj(actions, function(method, actionName) {
-      routes.push(new Route(method, currentStack + path, stack + (isRoot ? '/' : '') + name, actionName));
+      routes.push(new Route(method, currentStack + path, stack + (isRoot ? '/' : '') + name, actionName, options));
     });
   });
   (obj.children || []).forEach(function(child) {
@@ -66,13 +65,14 @@ Router.prototype.routesToString = function() {
       route.pathname + ' '.repeat(max.pathname - route.pathname.length),
       ' -> ',
       route.ctrlPath.substring(1) + '#' + route.actionName,
+      route.controller ? '' : ' (undefined)',
       '\n'
     );
   });
   return strbuf.join('');
 };
 
-function Route(method, pathname, ctrlPath, actionName) {
+function Route(method, pathname, ctrlPath, actionName, options) {
   this.method = method.toUpperCase();
   this.pathname = pathname;
   this.ctrlPath = ctrlPath;
@@ -83,6 +83,9 @@ function Route(method, pathname, ctrlPath, actionName) {
   }).map(function(path) {
     return path.substring(1);
   });
+  try {
+    this.controller = require(PATH.resolve(options.ctrlDir) + ctrlPath)[actionName];
+  } catch(e) {}
 }
 Route.prototype.convertParams = function(rowParams) {
   var params = {};

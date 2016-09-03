@@ -41,11 +41,7 @@ var issues = [
 issues.forEach(function(issue){
   console.log('request', issue.method, issue.pathname);
   var route = router.route(issue.method, issue.pathname);
-  if( !route ) return;
-  var ctrlModule = require('./controllers' + route.ctrlPath);
-  if( !ctrlModule ) { console.warn('undefined controller module'); return; }
-  var ctrl = ctrlModule[route.actionName];
-  if( typeof ctrl != 'function' ) { console.warn('undefined action method'); return; }
-  ctrl(null, null, route.params);
+  if( !route || typeof route.controller != 'function' ) return;
+  route.controller(null, null, route.params);
   console.log();
 });

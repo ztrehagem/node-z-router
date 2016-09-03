@@ -12,10 +12,6 @@ ctrl.show = function(req, resp, params) {
   console.log('routing api/v1/users#show with', params);
 };
 
-ctrl.edit = function(req, resp, params) {
-  console.log('routing api/v1/users#edit with', params);
-};
-
 ctrl.update = function(req, resp, params) {
   console.log('routing api/v1/users#update with', params);
 };

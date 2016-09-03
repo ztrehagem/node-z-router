@@ -16,13 +16,15 @@ $ npm install z-router
 
 ```js
 var ZRouter = require('z-router');
-// z-router provides a factory method
 var router = ZRouter(routes, options);
 ```
 
-notice: this version handles no property of `options`
+`options`:
+- ctrlDir
+  - controllers directory path. default: `'./controllers'`
 
-#### Create routes object
+
+`routes`:
 
 ```js
 var ns = ZRouter.namespace;
@@ -48,26 +50,50 @@ var routes = ns('root', {
 ]);
 ```
 
+ZRouter.namespace(name [, actions] [, children])
+  - name &lt;String&gt;
+  - actions &lt;Object [path, actionName]&gt; (option)
+  - children &lt;Array [namespace]&gt; (option)
+
 #### Make controller modules
 
 ```
 - /
   |- package.json
   `- controllers/
-    |- root.js
-    |- articles.js
-    `- api/
-      `- v1/
-        `- users.js
+     |- root.js
+     |- articles.js
+     `- api/
+        `- v1/
+           `- users.js
+```
+
+ex) root.js:
+```js
+exports.index = function(request, response, params) {
+  response.write('called: root#index');
+};
+exports.info = function(request, response, params) {
+  response.write('called: root#info');
+};
+exports.form = function(request, response, params) {
+  response.write('called: root#form');
+};
+exports.contact = function(request, response, params) {
+  response.write('called: root#contact');
+};
 ```
 
 #### Routing
 
 ```js
 var route = router.route('GET', '/info');
+if( route && typeof route.controller == 'function' ) {
+  route.controller(request, response, route.params);
+}
 ```
 
-`route` has these properties:
+`route` object has these properties:
 - method (`'GET'`, `'POST'`...)
 - pathname (`'/'`, `'/info'`, `'/api/v1/users/:id/edit'`...)
 - ctrlPath
@@ -79,28 +105,12 @@ var route = router.route('GET', '/info');
   - `GET /contact` -> `'form'`
   - `POST /contact` -> `'contact'`
   - `UPDATE /api/v1/users/123/edit` -> `'update'`
+- controller
+  - controller function
 - params
   - `/articles/2000/10/15/2` -> `{year: '2000', month: '10', day: '15', number: '2'}`
   - `/api/v1/users/123` -> `{id: '123'}`
   - `/api/v1/users/foobar` -> `{id: 'foobar'}`
-
-#### Call controller method
-
-controller module
-
-```js
-exports.index = function(request, response, params) {
-  response.write('called: root#index');
-};
-```
-
-and request handler
-
-```js
-var controllerModule = require('./controllers' + route.ctrlPath);
-var controller = controllerModule[route.actionName];
-controller(request, response, route.params);
-```
 
 #### Utils
 

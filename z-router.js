@@ -9,22 +9,24 @@ module.exports.namespace = function(name, paths, children) {
     children = paths;
     paths = null;
   }
-  return {
-    name: name,
-    paths: paths,
-    children: children
-  };
+  return new Namespace(name, paths, children);
 };
+
+function Namespace(name, paths, children) {
+  this.name = name;
+  this.paths = paths;
+  this.children = children;
+}
 
 function Router(routes, options) {
   this.routes = [];
   this.options = options || {};
   this.options.ctrlDir = this.options.ctrlDir || './controllers';
-  createRoutes(this.routes, '', routes, this.options, true);
+  createRoutes(this.routes, '/', '/', routes, this.options, true);
 }
 Router.prototype.route = function(method, pathname) {
   var matches;
-  var route = this.routes.find(function(route) {
+  var route = this.routes.find((route)=> {
     return route.method == method.toUpperCase() &&
       (matches = route.regexp.exec(pathname));
   });
@@ -37,28 +39,38 @@ Router.prototype.route = function(method, pathname) {
     params: route.convertParams(matches.slice(1))
   };
 };
-function createRoutes(routes, stack, obj, options, isRoot) {
-  var name = obj.name;
-  var currentStack = stack + (isRoot ? '' : name);
-  forObj(obj.paths || {}, function(path, actions) {
-    if( typeof actions == 'string' ) {
-      actions = {'get': actions};
+function createRoutes(routes, namespace, pathname, nsObj, options, isRoot) {
+  var name = nsObj.name;
+  if( !isRoot ) namespace = PATH.resolve(namespace, name);
+  if( !isRoot ) pathname = PATH.resolve(pathname, name);
+  console.log('create:', namespace, pathname);
+
+  forObj(nsObj.paths || {}, (path, obj)=> {
+    var childPath = PATH.resolve(pathname, path);
+    console.log('child:', childPath);
+    obj = wrapArray(obj);
+    if( typeof obj[0] == 'string' ) obj[0] = {GET: obj[0]};
+    if( !(obj[0] instanceof Namespace) ) {
+      var ctrlPath = namespace + (isRoot ? name : '');
+      forObj(obj.shift(), (method, actionname)=> {
+        routes.push(new Route(method, childPath, ctrlPath, actionname, options));
+      });
     }
-    forObj(actions, function(method, actionName) {
-      routes.push(new Route(method, currentStack + path, stack + (isRoot ? '/' : '') + name, actionName, options));
+    obj.forEach((nsObj)=> {
+      createRoutes(routes, namespace, childPath, nsObj, options);
     });
   });
-  (obj.children || []).forEach(function(child) {
-    createRoutes(routes, currentStack + '/', child, options);
+  (nsObj.children || []).forEach((nsObj)=> {
+    createRoutes(routes, namespace, pathname, nsObj, options);
   });
 }
 Router.prototype.routesToString = function() {
   var max = {
-    method: Math.max.apply(null, this.routes.map(function(route) {return route.method.length;})),
-    pathname: Math.max.apply(null, this.routes.map(function(route) {return route.pathname.length;}))
+    method: Math.max.apply(null, this.routes.map((route)=> {return route.method.length;})),
+    pathname: Math.max.apply(null, this.routes.map((route)=> {return route.pathname.length;}))
   };
   var strbuf = [];
-  this.routes.forEach(function(route) {
+  this.routes.forEach((route)=> {
     strbuf.push(
       ' '.repeat(max.method - route.method.length) + route.method,
       ' ',
@@ -73,14 +85,15 @@ Router.prototype.routesToString = function() {
 };
 
 function Route(method, pathname, ctrlPath, actionName, options) {
+  console.log('\t', method, '\t', pathname, '->', ctrlPath, '#', actionName);
   this.method = method.toUpperCase();
   this.pathname = pathname;
   this.ctrlPath = ctrlPath;
   this.actionName = actionName;
   this.regexp = new RegExp('^' + this.pathname.replace(/:[^/]+/g, '([^/]+)').replace(/\//g, '\\/') + '$');
-  this.paramKeys = this.pathname.split('/').filter(function(path) {
+  this.paramKeys = this.pathname.split('/').filter((path)=> {
     return path.startsWith(':');
-  }).map(function(path) {
+  }).map((path)=> {
     return path.substring(1);
   });
   try {
@@ -96,7 +109,11 @@ Route.prototype.convertParams = function(rowParams) {
 };
 
 function forObj(obj, fn) {
-  Object.keys(obj).forEach(function(key) {
+  Object.keys(obj).forEach((key)=> {
     fn(key, obj[key]);
   });
+}
+
+function wrapArray(target) {
+  return Array.isArray(target) ? target : [target];
 }

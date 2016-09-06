@@ -19,3 +19,7 @@ ctrl.update = function(req, resp, params) {
 ctrl.delete = function(req, resp, params) {
   console.log('routing api/v1/users#delete with', params);
 };
+
+ctrl.bar = function(req, resp, params) {
+  console.log('routing api/v1/users#bar with', params);
+};

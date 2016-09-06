@@ -29,21 +29,25 @@ var router = ZRouter(routes, options);
 ```js
 var ns = ZRouter.namespace;
 var routes = ns('root', {
-  '/': 'index',
-  '/info': 'info',
-  '/contact': {GET: 'form', POST: 'contact'}
+  '': 'index',
+  'info': 'info',
+  'contact': {GET: 'form', POST: 'contact'}
 }, [
   ns('articles', {
     '': 'index',
-    '/:year/:month/:day/:number': 'show'
+    ':year/:month/:day/:number': 'show'
   }),
   ns('api', [
     ns('v1', [
       ns('users', {
         '': {GET: 'index', POST: 'create'},
-        '/:id': {GET: 'show'},
-        '/:id/edit': {GET: 'edit', UPDATE: 'update'},
-        '/:id/delete': {DELETE: 'delete'}
+        ':id': [{GET: 'show', PUT: 'update', DELETE: 'delete'},
+          ns('hobbies', {
+            '': {GET: 'index', POST: 'create'},
+            ':hobbyId': {DELETE: 'delete'}
+          })
+        ],
+        ':id/bar': 'bar'
       })
     ])
   ])
@@ -52,8 +56,9 @@ var routes = ns('root', {
 
 ZRouter.namespace(name [, actions] [, children])
   - name &lt;String&gt;
-  - actions &lt;Object [path, actionName]&gt; (option)
-  - children &lt;Array [namespace]&gt; (option)
+  - actions &lt;Array[String/Object[path:name]/namespaceObj]&gt; (option)
+    - alse ok as not array
+  - children &lt;Array[namespace]&gt; (option)
 
 #### Make controller modules
 
@@ -65,7 +70,9 @@ ZRouter.namespace(name [, actions] [, children])
      |- articles.js
      `- api/
         `- v1/
-           `- users.js
+           |- users.js
+           `- users
+              `- hobbies.js
 ```
 
 ex) root.js:
@@ -104,13 +111,13 @@ if( route && typeof route.controller == 'function' ) {
   - `GET /` -> `'index'`
   - `GET /contact` -> `'form'`
   - `POST /contact` -> `'contact'`
-  - `UPDATE /api/v1/users/123/edit` -> `'update'`
+  - `PUT /api/v1/users/123` -> `'update'`
 - controller
   - controller function
 - params
   - `/articles/2000/10/15/2` -> `{year: '2000', month: '10', day: '15', number: '2'}`
   - `/api/v1/users/123` -> `{id: '123'}`
-  - `/api/v1/users/foobar` -> `{id: 'foobar'}`
+  - `/api/v1/users/123/hobbies/foobar` -> `{id: '123', hobbyId: 'foobar'}`
 
 #### Utils
 

@@ -58,7 +58,7 @@ function createRoutes(routes, namespace, pathname, nsObj, options, isRoot) {
       } else createRoutes(routes, namespace, childPath, obj, options);
     });
   });
-  
+
   (nsObj.children || []).forEach((nsObj)=> {
     createRoutes(routes, namespace, pathname, nsObj, options);
   });
@@ -84,7 +84,6 @@ Router.prototype.routesToString = function() {
 };
 
 function Route(method, pathname, ctrlPath, actionName, options) {
-  console.log('\t', method, '\t', pathname, '->', ctrlPath, '#', actionName);
   this.method = method.toUpperCase();
   this.pathname = pathname;
   this.ctrlPath = ctrlPath;

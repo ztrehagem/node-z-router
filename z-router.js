@@ -43,23 +43,22 @@ function createRoutes(routes, namespace, pathname, nsObj, options, isRoot) {
   var name = nsObj.name;
   if( !isRoot ) namespace = PATH.resolve(namespace, name);
   if( !isRoot ) pathname = PATH.resolve(pathname, name);
-  console.log('create:', namespace, pathname);
+  var ctrlPath = namespace + (isRoot ? name : '');
 
-  forObj(nsObj.paths || {}, (path, obj)=> {
+  forObj(nsObj.paths || {}, (path, actions)=> {
     var childPath = PATH.resolve(pathname, path);
-    console.log('child:', childPath);
-    obj = wrapArray(obj);
-    if( typeof obj[0] == 'string' ) obj[0] = {GET: obj[0]};
-    if( !(obj[0] instanceof Namespace) ) {
-      var ctrlPath = namespace + (isRoot ? name : '');
-      forObj(obj.shift(), (method, actionname)=> {
-        routes.push(new Route(method, childPath, ctrlPath, actionname, options));
-      });
-    }
-    obj.forEach((nsObj)=> {
-      createRoutes(routes, namespace, childPath, nsObj, options);
+
+    wrapArray(actions).forEach((obj)=> {
+      if( typeof obj == 'string' ) obj = {GET: obj};
+
+      if( !(obj instanceof Namespace) ) {
+        forObj(obj, (method, actionname)=> {
+          routes.push(new Route(method, childPath, ctrlPath, actionname, options));
+        });
+      } else createRoutes(routes, namespace, childPath, obj, options);
     });
   });
+  
   (nsObj.children || []).forEach((nsObj)=> {
     createRoutes(routes, namespace, pathname, nsObj, options);
   });
